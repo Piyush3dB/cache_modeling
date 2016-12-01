@@ -1,0 +1,63 @@
+Hello! Welcome to our source code for the paper "Modeling Cache
+Performance Beyond LRU" in HPCA'16.
+
+The model is written in C++. This repository contains the following
+files:
+
+  woof.h: Contains the main API for the model as well as several
+  configuration parameters near the top of the file. See below.
+
+  woof_repl.h: Contains ranking function implementations for several
+  common replacement policies. In particular, LRU, PDP, IRGD (aka
+  HarmonicExpectedTimeToReuse), etc..
+
+  woof_classifier.h: Contains stub code for classifying accesses into
+  different categories. As briefly mentioned in our paper and
+  described in our slides, this allows us to (for example) distinguish
+  between lines that have been reused or not, improving model accuracy
+  on some applications. This code is available upon request, but not
+  included for simplicity.
+
+  example.cpp: Contains code to run the model on a few analytical
+  reuse distance distributions. Shows how to initialize the model and
+  pass it parameters to solve.
+
+  rdtsc.h: Code to accurately time the model.
+
+  Makefile: Builds the example executable. Contains commands to
+  support profile-guided optimization, but on our machine we found
+  this actually made the model slower.
+
+Additionally, here's a brief description of the implementation:
+
+  (class) Cache: This is the main model class. It models the
+  performance of a cache of a given size, associativity, access
+  pattern, and replacement policy. To see how to initialize the model,
+  look at solve() in examples.cpp.
+
+  (namespace) sparse: Helper routines to coarsen and un-coarsen
+  distributions (Sec 6.2 of paper).
+
+  (class) Rank: A vector with additional helper methods to store ranks
+  as a function of age (Sec 5.1 of paper).
+
+  (class) Class: A single type of cache lines, e.g. lines from a
+  particular core, or lines that have been reused at least once. This
+  code distribution does not use classification support, but for more
+  information see our technical report [4] for details.
+
+  (class) Classifier: Models the distribution of lines among different
+  classes. Again, this code distribution does not use classification,
+  and we have only included a stub implementation of the Classifier in
+  woof_classifier.h.
+
+To install the model, perform the following steps:
+
+  1. Install armadillo from http://arma.sourceforge.net locally (we
+     tested version 4).
+
+  2. Run 'make'.
+
+Thanks for your interest!
+
+- Nathan Beckmann and Daniel Sanchez
