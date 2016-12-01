@@ -407,7 +407,18 @@ class Cache {
                 cl.age = sparse::expand(cl.age, sparsePoints, false);
                 cl.hit = sparse::expand(cl.hit, sparsePoints, true);
                 cl.evict = sparse::expand(cl.evict, sparsePoints, true);
+
+                std::ofstream out("hit.log");
+                std::cout << "writing hit distribution to out.log" << std::endl;
+                out << cl.hit;
+                out.close();
+
+                out.open("evict.log");
+                std::cout << "writing evict distribution to out.log" << std::endl;
+                out << cl.evict;
+                out.close();
             }
+            
 
             // std::cout << "Complete in " << i << " iterations." << std::endl;
         }
