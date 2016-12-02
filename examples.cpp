@@ -72,11 +72,11 @@ woof::vec rddRandom() {
 }
 
 woof::vec rddScan() {
-    woof::vec rdd(ARRAY_SIZE * 4, arma::fill::zeros);
+    woof::vec rdd(CACHE_SIZE * 4, arma::fill::zeros);
 
-    rdd(ARRAY_SIZE/2) = 0.25;
-    rdd(ARRAY_SIZE*1.2) = 0.25;
-    rdd(ARRAY_SIZE*3) = 0.5;
+    rdd(CACHE_SIZE/2) = 0.25;
+    rdd(CACHE_SIZE*1.2) = 0.25;
+    rdd(CACHE_SIZE*3) = 0.5;
 
     return rdd;
 }
@@ -100,11 +100,11 @@ int main() {
     // note: lru converges slowly; for an LRU model, it makes sense
     // sense to specialize the model by eliminating ranks from the
     // solution (since rank = age), which speeds convergence
-    //std::cout << "LRU:\n";
-    //solve(rdd, woof::repl::LRU);
+    std::cout << "MRU:\n";
+    solve(rdd, woof::repl::MRU);
 
-    std::cout << "ETTR:\n";
-    solve(rdd, woof::repl::ExpectedTimeToReuse);
+    //std::cout << "ETTR:\n";
+    //solve(rdd, woof::repl::ExpectedTimeToReuse);
 
     // std::cout << "PDP:\n";
     // solve(rdd, woof::Rank::factory<woof::repl::PDP>);

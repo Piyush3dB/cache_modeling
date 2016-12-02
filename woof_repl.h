@@ -8,6 +8,19 @@ namespace woof {
 // (which performs relatively poorly). -nzb
 namespace repl {
 
+// an arbitrary replacement policy
+inline Rank* MRU(const uword n_elem) {
+    auto r = new Rank(n_elem, 0, n_elem);
+    for (uword a = 0; a < n_elem; a++) {
+        (*r)(a) = n_elem-a;
+    }
+    return r;
+}
+
+inline Rank* MRU(const uword n_elem, const Class& cl) {
+    return MRU(n_elem);
+}
+
 // Least recently used.
 inline Rank* LRU(const uword n_elem) {
     auto r = new Rank(n_elem, 0, n_elem);
