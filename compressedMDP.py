@@ -95,7 +95,7 @@ def policy_iteration(p,d,s,drag=1,allow_plot=False):
     # step = - int(ed/8.)
     # assert abs(step) >= 1
     # cache_size = range(int(ed),s,step) + [s,]
-    cache_size = [s] * 4
+    cache_size = [s] * 3
     # values = np.zeros(max(d)+10)
     values = np.arange(n)
     ranks = np.zeros_like(values)
@@ -119,8 +119,6 @@ def fill_rdd(p,d,h):
 def parse_policy(values,p,d,s):
     critical_values = np.zeros_like(values)
     critical_values[d] = values[d]
-    plt.plot(critical_values)
-    plt.show()
 
     ranks = values_to_ranks(critical_values)
     log_array(ranks,'ranks')
@@ -187,7 +185,8 @@ if __name__ == '__main__':
     s = 350
     print "size = %d" %s
 
-    drag = 0.9999
+    drag = 0.999
     values = policy_iteration(p,d,s,drag)
-    #values = value_iteration(values,p,d,h,e,s,drag,True)
     log_values(values,'values-'+str(s))
+    plt.plot(values)
+    plt.show()
