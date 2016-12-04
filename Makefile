@@ -1,7 +1,7 @@
-all : examples
-	./examples
+all : compute
+	./compute
 
-examples : $(wildcard *.cpp *.h) Makefile
+compute : $(wildcard *.cpp *.h) Makefile
 	g++ -o $@ $(wildcard *.cpp) -I armadillo/ --std=c++11 -Ofast -DNDEBUG
 
 	# # # PGO is slower??

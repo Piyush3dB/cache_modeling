@@ -3,7 +3,7 @@
 #include "rdtsc.h"
 
 const uint32_t ARRAY_SIZE = 1500;
-const uint32_t CACHE_SIZE = 550;
+uint32_t CACHE_SIZE = 550;
 const uint32_t ASSOCIATIVITY = 16;
 const uint32_t NUM_SPARSE_POINTS = 128; // age coarsening
 
@@ -121,10 +121,14 @@ woof::vec rddStack() {
     return rdd;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc > 1) {
+        CACHE_SIZE = atoi(argv[1]);
+    }
+    std::cout<< "size: " << CACHE_SIZE << std::endl;
+
     auto rdd = rddRead("rdd.out");
     assert(std::fabs(arma::accu(rdd) - 1.) < 1e-2);
-    std::cout<< "size: " << CACHE_SIZE << std::endl;
 
     // solve for diff repl policies
 
