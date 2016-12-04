@@ -8,7 +8,32 @@ namespace woof {
 // (which performs relatively poorly). -nzb
 namespace repl {
 
-// an arbitrary replacement policy
+// Read ranks from file.
+inline Rank* rankFile(const uword n_elem) {
+    char* rankFileName = "ranks.out";
+    std::ifstream rank_file;
+    rank_file.open(rankFileName);
+    int n = 0;
+    rank_file >> n;
+
+    auto r = new Rank(n_elem, 0, n_elem);
+    for (uword a = 0; a < n_elem; a++) {
+        if (a<n) {
+            rank_file >> (*r)(a);
+        }
+        else {
+            (*r)(a) = n+1;
+        }
+    }
+    rank_file.close();
+    return r;
+}
+
+inline Rank* rankFile(const uword n_elem, const Class& cl) {
+    return rankFile(n_elem);
+}
+
+// Most recently used.
 inline Rank* MRU(const uword n_elem) {
     auto r = new Rank(n_elem, 0, n_elem);
     for (uword a = 0; a < n_elem; a++) {

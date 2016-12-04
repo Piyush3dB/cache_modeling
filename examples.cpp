@@ -3,7 +3,7 @@
 #include "rdtsc.h"
 
 const uint32_t ARRAY_SIZE = 1500;
-const uint32_t CACHE_SIZE = 1000;
+const uint32_t CACHE_SIZE = 550;
 const uint32_t ASSOCIATIVITY = 16;
 const uint32_t NUM_SPARSE_POINTS = 128; // age coarsening
 
@@ -34,6 +34,7 @@ void solve(
     // print results
     std::cout << "Model solved hit rate of " << model.hitRate()
               << " in " << (end - start) << " cycles (full solution).\n";
+/*
 
     // instantiate the sparse model after coarsening regions
     woof::uvec sparsePoints = woof::sparse::divide(
@@ -59,6 +60,7 @@ void solve(
     // print results
     std::cout << "Model solved hit rate of " << sparseModel.hitRate()
               << " in " << (end - start) << " cycles (sparse solution).\n";
+*/
 }
 
 woof::vec rddRandom() {
@@ -69,6 +71,34 @@ woof::vec rddRandom() {
     }
 
     return rdd;
+}
+
+woof::vec rddRead(char* filename) {
+    std::ifstream rdd_file;
+    int d;
+    float p;
+    int n = 1200;
+    rdd_file.open(filename);
+    woof::vec rdd(n, arma::fill::zeros);
+    while (!rdd_file.eof()) {
+        rdd_file >> d >> p;
+        rdd(d) = p;
+    }
+    rdd_file.close();
+
+    return rdd;
+}
+
+void dumpArray(woof::vec array, char* filename) {
+    std::ofstream outfile;
+    outfile.open(filename);
+    int n = array.n_elem;
+    for (int i=0;i<n;i++) {
+        outfile << array(i) << std::endl;
+    }
+    outfile.close();
+
+    return;
 }
 
 woof::vec rddScan() {
@@ -92,16 +122,17 @@ woof::vec rddStack() {
 }
 
 int main() {
-    auto rdd = rddScan();
+    auto rdd = rddRead("rdd.out");
     assert(std::fabs(arma::accu(rdd) - 1.) < 1e-2);
+    std::cout<< "size: " << CACHE_SIZE << std::endl;
 
     // solve for diff repl policies
 
     // note: lru converges slowly; for an LRU model, it makes sense
     // sense to specialize the model by eliminating ranks from the
     // solution (since rank = age), which speeds convergence
-    std::cout << "MRU:\n";
-    solve(rdd, woof::repl::MRU);
+    std::cout << "Rank form file:\n";
+    solve(rdd, woof::repl::rankFile);
 
     //std::cout << "ETTR:\n";
     //solve(rdd, woof::repl::ExpectedTimeToReuse);

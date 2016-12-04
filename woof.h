@@ -408,13 +408,13 @@ class Cache {
                 cl.hit = sparse::expand(cl.hit, sparsePoints, true);
                 cl.evict = sparse::expand(cl.evict, sparsePoints, true);
 
-                std::ofstream out("hit.log");
-                std::cout << "writing hit distribution to out.log" << std::endl;
+                std::ofstream out("hit.out");
+                std::cout << "writing hit distribution to hit.out" << std::endl;
                 out << cl.hit;
                 out.close();
 
-                out.open("evict.log");
-                std::cout << "writing evict distribution to out.log" << std::endl;
+                out.open("evict.out");
+                std::cout << "writing evict distribution to evict.out" << std::endl;
                 out << cl.evict;
                 out.close();
             }
