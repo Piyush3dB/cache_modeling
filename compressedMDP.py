@@ -90,34 +90,24 @@ def value_iteration(values,p,d,h,e,s,drag,allow_plot=False):
 
     return this - this[0]
 
-def policy_iteration(p,d,s,drag=1):
+def policy_iteration(p,d,s,drag=1,allow_plot=False):
     ed = round(np.dot(p,d))
     # step = - int(ed/8.)
     # assert abs(step) >= 1
     # cache_size = range(int(ed),s,step) + [s,]
-    cache_size = [s] * 2
+    cache_size = [s] * 4
     # values = np.zeros(max(d)+10)
     values = np.arange(n)
     ranks = np.zeros_like(values)
     for s in cache_size:
+        # need to detect whether or not it's converged
 
-        # [opt,opt_miss_rate] = trimodal.opt_policy(p,d,s)
+        h,e = parse_policy(values,p,d,s)
 
-        # [h,e] = parse_policy(values,p,d,s)[1:3]
-        # [h,e] = sim_policy(values,p,d,s)[1:3]
+        h = fill_rdd(p,d,h)
 
-        # call the modeling code
-        ranks = values_to_ranks(values)
-        log_array(ranks,'ranks')
-        print "log the ranks"
+        values = value_iteration(values,p,d,h,e,s,drag,allow_plot)
 
-        call('./examples')
-        h = read_distribution('hit.out')
-        e = read_distribution('evict.out')
-        
-        # h = fill_rdd(p,d,h)
-
-        values = value_iteration(values,p,d,h,e,s,drag,False)
     return values
 
 def fill_rdd(p,d,h):
@@ -126,75 +116,21 @@ def fill_rdd(p,d,h):
 
     return new_h
 
-def sim_policy(values,p,d,s):
-
-    idealRdDist = [(p[i],d[i]) for i in range(len(p))]
-    trace = traceGen.TraceDistribution(idealRdDist)
-    trace.generate(10000)
-
-    plt.close('all')
-    plt.figure()
-    def idealRdDistNonSparse():
-        cump = 0.
-        i = 0
-        rdd = np.zeros_like(trace.rdDist)
-        for d in range(len(rdd)):
-            while i < len(idealRdDist) and idealRdDist[i][1] <= d:
-                cump += idealRdDist[i][0]
-                i += 1
-            rdd[d] = cump * len(trace.trace)
-        return rdd
-
-    plt.plot(idealRdDistNonSparse(), label='Ideal RD dist')
-    plt.plot(np.cumsum(trace.rdDist), label='Actual RD dist')
-    plt.legend(loc='best')
-    plt.show()
-
-    plt.figure()
-    plt.plot(values)
-    plt.xlabel('age')
-    plt.ylabel('value')
-    plt.ylim([min(values[0:max(d)]),max(values[0:max(d)])])
-    plt.show()
-
-    my_cache = cache.Cache(s,values)
-
-    for i in range(len(trace.trace)):
-        my_cache.lookup(trace.trace[i])
-
-    miss_rate = 1.0 - float(my_cache.get_hit_rate())
-    events = float(sum(my_cache.get_hit_ages()) + sum(my_cache.get_evict_ages()))
-    h = my_cache.get_hit_ages() / events
-    e = my_cache.get_evict_ages() / events
-    # plot hit and eviction distribution
-    plt.figure()
-    plt.subplot(2,1,1,title='hit age distribution')
-    plt.plot(np.cumsum(my_cache.get_hit_ages()/events))
-    plt.subplot(2,1,2,title='evict age distribution')
-    plt.plot(np.cumsum(my_cache.get_evict_ages()/events))
-    plt.show()
-
-    return miss_rate, h, e
-
 def parse_policy(values,p,d,s):
-    critical_point = [0,] + d[0:-1]
-    policy = np.argsort([values[critical_point[i]+1] for i in range(len(critical_point))])
-    
-    if policy[0] == 0:
-        miss_rate = trimodal.miss_rate_mru(p,d,s)
-        h,e = trimodal.hit_rate_mru(p,d,s)
-    elif policy[0] == 1:
-        miss_rate = trimodal.miss_rate_d1(p,d,s)
-        h,e = trimodal.hit_rate_d1(p,d,s)
-    elif policy[0] == 2:
-        if policy[1] == 0:
-            miss_rate = trimodal.miss_rate_d2(p,d,s)
-            h,e = trimodal.hit_rate_d2(p,d,s)
-        elif policy[1] == 1:
-            miss_rate = trimodal.miss_rate_d2_d1(p,d,s)
-            h,e = trimodal.hit_rate_d2_d1(p,d,s)
+    critical_values = np.zeros_like(values)
+    critical_values[d] = values[d]
+    plt.plot(critical_values)
+    plt.show()
 
-    return miss_rate, h, e
+    ranks = values_to_ranks(critical_values)
+    log_array(ranks,'ranks')
+    print "log the ranks"
+
+    call('./compute '+str(s),shell=True)
+    h = read_distribution('hit.out')
+    e = read_distribution('evict.out')
+
+    return h, e
 
 def values_to_ranks(values):
     temp = values.argsort()
@@ -227,33 +163,31 @@ def read_distribution(filename):
     return h
 
 def load_rdd(filename):
+    n_line = 50
+    p = np.zeros(n_line,dtype=float)
+    d = np.zeros(n_line,dtype=int)
+
     rdd = np.zeros(n,dtype=float)
     f = open(filename)
-    for line in f:
-        d,p = line.split(' ')   
-        d = int(float(d))
-        p = float(p)
-        rdd[d] =  p
+    for i,line in enumerate(f):
+        d[i],p[i] = line.split(' ')   
+        rdd[d[i]] =  p[i]
     f.close()
-    return rdd
+    return p,d,rdd
 
 n = 1200
 if __name__ == '__main__':
 
-    # trimodal.analysis(p,d)
-    drag = 0.9999
-    rdd = load_rdd("rdd.out")
-    ed = 0
-    for d,p in enumerate(rdd):
-        ed += p*d
+    p,d,rdd = load_rdd("rdd.out")
+    ed = round(np.dot(p,d))
     print "expected reuse distance = %d" %ed
     plt.plot(rdd)
     plt.show()
-    p = [0.25, 0.25, 0.5]
-    d = [40,80,320]
 
-    s = 550
+    s = 350
     print "size = %d" %s
+
+    drag = 0.9999
     values = policy_iteration(p,d,s,drag)
     #values = value_iteration(values,p,d,h,e,s,drag,True)
     log_values(values,'values-'+str(s))
