@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from subprocess import call
+from scipy.stats import rankdata
 #import analytical_model as model
 #import trimodal
 #import traceGen 
@@ -15,7 +16,6 @@ def value_iteration(values,p,d,h,e,s,drag,allow_plot=False):
     
     threshold = 1e-4
 
-    [d1,d2,d3] = d[0:3]
     v = np.zeros((2,n))
     v[1,:len(values)] = values
 
@@ -23,7 +23,6 @@ def value_iteration(values,p,d,h,e,s,drag,allow_plot=False):
 
     h = np.where(h < 1e-5, np.zeros_like(h), h)
     boundry = np.argmax(np.cumsum(h))
-    print boundry
 
     cumevents = np.cumsum((h+e)[::-1])[::-1]
     cumevents = np.where(cumevents < 1e-5, np.ones_like(cumevents), cumevents)
@@ -32,14 +31,14 @@ def value_iteration(values,p,d,h,e,s,drag,allow_plot=False):
         plt.close('all')
         plt.figure()
         plt.subplot(3,1,1)
+        plt.plot(values)
+        plt.title('values')
+        plt.subplot(3,1,2)
         plt.plot(h)
         plt.title('hit')
-        plt.subplot(3,1,2)
+        plt.subplot(3,1,3)
         plt.plot(e)
         plt.title('eviction')
-        plt.subplot(3,1,3)
-        plt.plot(cumevents)
-        plt.title('cumevents')
         plt.show()
 
         plt.close('all')
@@ -117,11 +116,21 @@ def fill_rdd(p,d,h):
     return new_h
 
 def parse_policy(values,p,d,s):
-    critical_values = np.zeros_like(values)
-    critical_values[d] = values[d]
+    critical_values = np.arange(len(values),dtype=float)
+    critical_values[max(d)+1:] = 0
+    for i in range(len(d)):
+        critical_values[d[i]+1:] -= abs(critical_values[d[i]+1] - values[d[i]+1])
 
     ranks = values_to_ranks(critical_values)
     log_array(ranks,'ranks')
+    plt.close("all")
+    plt.subplot(2,1,1)
+    plt.plot(critical_values)
+    plt.title('critical values')
+    plt.subplot(2,1,2)
+    plt.plot(ranks)
+    plt.title('ranks')
+    plt.show()
     print "log the ranks"
 
     call('./compute '+str(s),shell=True)
@@ -131,9 +140,7 @@ def parse_policy(values,p,d,s):
     return h, e
 
 def values_to_ranks(values):
-    temp = values.argsort()
-    ranks = np.empty(len(values),int) 
-    ranks[temp] = np.arange(len(values),0,-1)
+    ranks = rankdata(-values,'min')
     return ranks
     
 def log_values(values,filename):
@@ -182,11 +189,11 @@ if __name__ == '__main__':
     plt.plot(rdd)
     plt.show()
 
-    s = 350
+    s = 10
     print "size = %d" %s
 
-    drag = 0.999
-    values = policy_iteration(p,d,s,drag)
+    drag = 0.9999
+    values = policy_iteration(p,d,s,drag,True)
     log_values(values,'values-'+str(s))
     plt.plot(values)
     plt.show()
